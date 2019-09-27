@@ -1,0 +1,9 @@
+LOG FILE
+
+ID: 782226
+Fecha: 2019-09-27 12:09
+Nombre del archivo: informe.pdf
+ID Cliente: 782226
+ID Prueba: 52
+Tiempo de transferencia: 0.1405468600000006 segundo(s)
+Estado de transferencia: Exitosa

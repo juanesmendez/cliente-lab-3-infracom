@@ -4,6 +4,7 @@ import errno
 import pickle
 import hashlib
 import time
+import datetime
 import threading
 import concurrent.futures
 from tkinter import *
@@ -18,6 +19,11 @@ PORT = 1236
 FILE_1 = "./files/archivo_recibido.pdf"
 FILE_NAME_1 = "./files/archivo_recibido"
 FILE_NAME_2 = "./files/video_recibido"
+LOG_FILE = "./logs/log_file_"
+FILE_DICT = {
+    "1" : "informe.pdf",
+    "2" : "video-4.mp4"
+}
 
 def createMessage(message):
     #Chequear el atributo message size, puede que este incorrecto
@@ -51,34 +57,52 @@ def receiveMessage(clientSocket):
         print('General error', str(e))
 
 
-def receiveFile(clientSocket, id, fileId):
-    print("Receiving file from server...")
-    messageHeader = clientSocket.recv(HEADERSIZE)
-    messageLength = int(messageHeader.decode("utf-8").strip())
-    print("File size:", messageLength)
+def receiveFile(clientSocket, id, fileId, logFileName):
+    try:
+        #Manejo de log:
+        #logFileName = LOG_FILE + str(id) + ".txt"
+        logFile = open(logFileName, 'a')
 
-    if fileId == "1":
-        fileName = FILE_NAME_1 + f"-{id}.pdf"
+        print("Receiving file from server...")
+        #Inicio de recepcion del archivo
+        messageHeader = clientSocket.recv(HEADERSIZE)
+        messageLength = int(messageHeader.decode("utf-8").strip())
+        print("File size:", messageLength)
 
-    elif fileId == "2":
-        fileName = FILE_NAME_2 + f"-{id}.mp4"
+        if fileId == "1":
+            fileName = FILE_NAME_1 + f"-{id}.pdf"
 
-    file = open(fileName, 'wb')
-    data = b""
-    bytesLeft = messageLength
-    while bytesLeft > 0:
-        #print(f"{bytesLeft} Bytes left")
-        #data = data + clientSocket.recv(1024)
-        file.write(clientSocket.recv(1024))
-        bytesLeft = bytesLeft - 1024
+        elif fileId == "2":
+            fileName = FILE_NAME_2 + f"-{id}.mp4"
 
-    #data = clientSocket.recv(messageLength)
-    #print("data: ", data)
+        file = open(fileName, 'wb')
+        data = b""
+        bytesLeft = messageLength
+        #Se empieza a tomar el tiempo de transferencia:
+        startTime = time.perf_counter()
+        while bytesLeft > 0:
+            # print(f"{bytesLeft} Bytes left")
+            # data = data + clientSocket.recv(1024)
+            file.write(clientSocket.recv(1024))
+            bytesLeft = bytesLeft - 1024
+        finishTime = time.perf_counter()
+        logFile.write(f"Tiempo de transferencia: {finishTime - startTime} segundo(s)\n")
+        # data = clientSocket.recv(messageLength)
+        # print("data: ", data)
 
-    file.close()
-    print("File received.")
-    #tkinter.messagebox.showinfo("Estado de solicitud", "El archivo fue recibido exitosamente")
-    return fileName
+        file.close()
+        print("File received.")
+        # Si las lineas de arriba no lanzan ninguna excepción, la transferencia del archivo fue exitosa:
+        logFile.write("Estado de transferencia: Exitosa\n")
+        logFile.close()
+        # tkinter.messagebox.showinfo("Estado de solicitud", "El archivo fue recibido exitosamente")
+        return fileName
+    except Exception as e:
+        logFile.write("Estado de transferencia: Error recibiendo archivo.\n")
+        logFile.close()
+        print('General error', str(e))
+
+
 
 
 def receiveDigest(s):
@@ -132,13 +156,14 @@ def testConnection():
 def doTestEvent(comboBoxNumConexiones, comboBoxArchivo):
     print("Num con:", comboBoxNumConexiones.get())
     print("Archivo:", comboBoxArchivo.get())
+    testId = random.randint(1, 100)
     if comboBoxNumConexiones.get() is not "" and comboBoxArchivo.get() is not "":
         if comboBoxArchivo.get() == "Archivo PDF":
             fileId = "1"
         elif comboBoxArchivo.get() == "Video MP4":
             fileId = "2"
 
-        startMultipleConnections(int(comboBoxNumConexiones.get()), fileId)
+        startMultipleConnections(int(comboBoxNumConexiones.get()), fileId, testId)
     else:
         tkinter.messagebox.showerror("Error", "Se deben llenar todos los campos.")
 
@@ -146,13 +171,14 @@ def doTestEvent(comboBoxNumConexiones, comboBoxArchivo):
 def startSingleConnection(comboBoxArchivo):
     print("Archivo:", comboBoxArchivo.get())
     if comboBoxArchivo.get() is not "":
+        fileId = ""
         if comboBoxArchivo.get() == "Archivo PDF":
             fileId = "1"
         elif comboBoxArchivo.get() == "Video MP4":
             fileId = "2"
 
         start = time.perf_counter()
-        startConnection(fileId)
+        startConnection(fileId, "")
         finish = time.perf_counter()
         tkinter.messagebox.showinfo("Resultados del test", f"Terminado en {round(finish - start, 2)} segundo(s)")
 
@@ -160,13 +186,13 @@ def startSingleConnection(comboBoxArchivo):
         tkinter.messagebox.showerror("Error", "Se deben llenar todos los campos.")
 
 
-def startMultipleConnections(numConnections, fileId):
+def startMultipleConnections(numConnections, fileId, testId):
     start = time.perf_counter()
     threads = []
 
     try:
         for i in range(numConnections):
-            t = threading.Thread(target=startConnection(fileId))
+            t = threading.Thread(target=startConnection(fileId, testId))
             t.start()
             threads.append(t)
 
@@ -184,7 +210,7 @@ def startMultipleConnections(numConnections, fileId):
 
 
 
-def startConnection(fileId):
+def startConnection(fileId, testId):
     id = random.randint(1, 1000000)
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -216,7 +242,25 @@ def startConnection(fileId):
                 # Empezar a recibir archivo
                 #file = receiveFile(s)
 
-                fileName = receiveFile(s, id, fileId) #Retorna el nombre del archivo guardado
+                #Generar log
+                if testId is "":
+                    logFileName = LOG_FILE + str(id) + ".txt"
+                else:
+                    logFileName = LOG_FILE + str(testId) + "_" + str(id) + ".txt"
+
+                logFile = open(logFileName, 'w')
+                logFile.write(f"LOG FILE\n\n")
+                logFile.write(f"ID: {str(id)}\n")
+                logFile.write(f"Fecha: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
+                logFile.write(f"Nombre del archivo: {FILE_DICT[fileId]}\n")
+                logFile.write(f"ID Cliente: {id}\n")
+                if testId is not "":
+                    logFile.write(f"ID Prueba: {testId}\n")
+                else:
+                    logFile.write(f"ID Prueba: N/A\n")
+                logFile.close()
+
+                fileName = receiveFile(s, id, fileId, logFileName) #Retorna el nombre del archivo guardado
 
                 # Luego de recibir el archivo se pide el digest:
                 #msg = input("Digite su mensaje:")  # Digitar DIGEST

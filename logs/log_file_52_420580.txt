@@ -1,0 +1,9 @@
+LOG FILE
+
+ID: 420580
+Fecha: 2019-09-27 12:09
+Nombre del archivo: informe.pdf
+ID Cliente: 420580
+ID Prueba: 52
+Tiempo de transferencia: 0.17398723200000177 segundo(s)
+Estado de transferencia: Exitosa

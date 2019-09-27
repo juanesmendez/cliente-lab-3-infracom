@@ -1,0 +1,8 @@
+LOG FILE
+
+ID: 599603
+Fecha: 2019-09-27 12:06
+Nombre del archivo: video-4.mp4
+ID Cliente: 599603
+Tiempo de transferencia: 0.3322166949999996 segundo(s)
+Estado de transferencia: Exitosa

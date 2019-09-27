@@ -1,0 +1,9 @@
+LOG FILE
+
+ID: 748500
+Fecha: 2019-09-27 12:09
+Nombre del archivo: informe.pdf
+ID Cliente: 748500
+ID Prueba: 52
+Tiempo de transferencia: 0.14414905099999942 segundo(s)
+Estado de transferencia: Exitosa

@@ -1,0 +1,8 @@
+LOG FILE
+
+ID: 214129
+Fecha: 2019-09-27 12:06
+Nombre del archivo: video-4.mp4
+ID Cliente: 214129
+Tiempo de transferencia: 0.2576616119999997 segundo(s)
+Estado de transferencia: Exitosa
