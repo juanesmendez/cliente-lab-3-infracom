@@ -3,7 +3,12 @@ import sys
 import errno
 import pickle
 import hashlib
+import time
+import threading
 import concurrent.futures
+from tkinter import *
+import tkinter.messagebox
+import random
 
 HEADERSIZE = 10
 
@@ -11,13 +16,15 @@ IP = "127.0.0.1"
 PORT = 1236
 
 FILE_1 = "./files/archivo_recibido.pdf"
+FILE_NAME_1 = "./files/archivo_recibido"
+FILE_NAME_2 = "./files/video_recibido"
 
 def createMessage(message):
-    #Chequear el atributo message size, puede que esté incorrecto
+    #Chequear el atributo message size, puede que este incorrecto
     msg = {"messageSize": len(message.encode("utf-8")),
      "message": message.upper()}
     msg = pickle.dumps(msg)
-    # Añadir header de 10 bytes
+    # Anadir header de 10 bytes
     messageHeader = f"{len(msg):<{HEADERSIZE}}".encode("utf-8")
 
     print(f"Message header: {messageHeader}")
@@ -44,18 +51,23 @@ def receiveMessage(clientSocket):
         print('General error', str(e))
 
 
-def receiveFile(clientSocket):
+def receiveFile(clientSocket, id, fileId):
     print("Receiving file from server...")
     messageHeader = clientSocket.recv(HEADERSIZE)
     messageLength = int(messageHeader.decode("utf-8").strip())
     print("File size:", messageLength)
 
-    file = open(FILE_1, 'wb')
+    if fileId == "1":
+        fileName = FILE_NAME_1 + f"-{id}.pdf"
 
+    elif fileId == "2":
+        fileName = FILE_NAME_2 + f"-{id}.mp4"
+
+    file = open(fileName, 'wb')
     data = b""
     bytesLeft = messageLength
     while bytesLeft > 0:
-        print(f"{bytesLeft} Bytes left")
+        #print(f"{bytesLeft} Bytes left")
         #data = data + clientSocket.recv(1024)
         file.write(clientSocket.recv(1024))
         bytesLeft = bytesLeft - 1024
@@ -65,7 +77,8 @@ def receiveFile(clientSocket):
 
     file.close()
     print("File received.")
-    return file
+    #tkinter.messagebox.showinfo("Estado de solicitud", "El archivo fue recibido exitosamente")
+    return fileName
 
 
 def receiveDigest(s):
@@ -84,9 +97,9 @@ def receiveDigest(s):
         print('General error', str(e))
 
 
-def compareDigest(digest):
+def compareDigest(digest, fileName):
     print("Iniciando compararacion del digest:")
-    file = open(FILE_1, 'rb')
+    file = open(fileName, 'rb')
     fileContent = file.read()
     h = hashlib.sha256()
     h.update(fileContent)
@@ -96,65 +109,206 @@ def compareDigest(digest):
     else:
         return False
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((IP, PORT))
-#s.setblocking(False)
 
-#Enviar el primer mensaje
-msg = input("Digite un mensaje: ")
-message = createMessage(msg)
-s.sendall(message)
-
-while True:
-    message = receiveMessage(s)
+def testConnection():
     try:
-        if message["message"] == "HELLO BACK":
-            # El usuario debe digitar 'PREPARED'
-            print("C:", message["message"])
-            msg = input("Digite su mensaje:") # Digitar PREPARED
-            message = createMessage(msg)
-            s.sendall(message)
-        # Si el servidor nos lista los archivos
-        elif "ARCHIVOS" in message["message"]:
-            print("C:", message["message"])
-            msg = input("Escoga un archivo:") # Digitar el numero del archivo
-            message = createMessage(msg)
-            s.sendall(message)
-            # Empezar a recibir archivo
-            #file = receiveFile(s)
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((IP, PORT))
 
-            file = receiveFile(s)
+        message = createMessage("TEST")
+        s.sendall(message)
 
-            # Luego de recibir el archivo se pide el digest:
-            msg = input("Digite su mensaje:")  # Digitar DIGEST
-            message = createMessage(msg)
-            s.sendall(message)
+        message = receiveMessage(s)
+        if message['message'] == "OK":
+            tkinter.messagebox.showinfo("Estado del test", "Test exitoso! Se pudo establecer una conexión con el servidor.")
+        else:
+            tkinter.messagebox.showerror("Estado del test", "Error conectandose con el servidor.")
 
-            #Recibir digest
-            digest = receiveDigest(s)
-            #Se compara el digest recibido por el calculado
-            res = compareDigest(digest)
-            if res:
-                print("El archivo no fue alterado.")
-            else:
-                print("El archivo FUE alterado.")
-
-
-            #Cierro la conexión con el servidor
-            s.close()
-            break
-    except IOError as e:
-        if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
-            print('Reading error', str(e))
-            sys.exit()
-        continue
     except Exception as e:
+        tkinter.messagebox.showerror("Estado del test", "Error conectandose con el servidor.")
         print('General error', str(e))
-        sys.exit()
 
 
-#with concurrent.futures.ThreadPoolExecutor() as executor:
-    
+def doTestEvent(comboBoxNumConexiones, comboBoxArchivo):
+    print("Num con:", comboBoxNumConexiones.get())
+    print("Archivo:", comboBoxArchivo.get())
+    if comboBoxNumConexiones.get() is not "" and comboBoxArchivo.get() is not "":
+        if comboBoxArchivo.get() == "Archivo PDF":
+            fileId = "1"
+        elif comboBoxArchivo.get() == "Video MP4":
+            fileId = "2"
+
+        startMultipleConnections(int(comboBoxNumConexiones.get()), fileId)
+    else:
+        tkinter.messagebox.showerror("Error", "Se deben llenar todos los campos.")
+
+
+def startSingleConnection(comboBoxArchivo):
+    print("Archivo:", comboBoxArchivo.get())
+    if comboBoxArchivo.get() is not "":
+        if comboBoxArchivo.get() == "Archivo PDF":
+            fileId = "1"
+        elif comboBoxArchivo.get() == "Video MP4":
+            fileId = "2"
+
+        start = time.perf_counter()
+        startConnection(fileId)
+        finish = time.perf_counter()
+        tkinter.messagebox.showinfo("Resultados del test", f"Terminado en {round(finish - start, 2)} segundo(s)")
+
+    else:
+        tkinter.messagebox.showerror("Error", "Se deben llenar todos los campos.")
+
+
+def startMultipleConnections(numConnections, fileId):
+    start = time.perf_counter()
+    threads = []
+
+    try:
+        for i in range(numConnections):
+            t = threading.Thread(target=startConnection(fileId))
+            t.start()
+            threads.append(t)
+
+        for thread in threads:
+            thread.join()
+
+        finish = time.perf_counter()
+
+        print(f"Terminado en {round(finish - start, 2)} second(s)")
+        tkinter.messagebox.showinfo("Resultados del test", f"Terminado en {round(finish - start, 2)} segundo(s)")
+    except Exception as e:
+        tkinter.messagebox.showerror("Estado de la solicitud", "Error conectandose con el servidor.")
+        print('General error', str(e))
+
+
+
+
+def startConnection(fileId):
+    id = random.randint(1, 1000000)
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((IP, PORT))
+    except Exception as e:
+        tkinter.messagebox.showinfo("Error conectandose al servidor",
+                                 "El servidor no se encuentra en funcionamiento. Por favor intentar de nuevo mas tarde.")
+        print('General error', str(e))
+    #s.setblocking(False)
+    #Enviar el primer mensaje
+    #msg = input("Digite un mensaje: ")
+    message = createMessage("HELLO")
+    s.sendall(message)
+    while True:
+        message = receiveMessage(s)
+        try:
+            if message["message"] == "HELLO BACK":
+                # El usuario debe digitar 'PREPARED'
+                print("C:", message["message"])
+                #msg = input("Digite su mensaje:") # Digitar PREPARED
+                message = createMessage("PREPARED")
+                s.sendall(message)
+            # Si el servidor nos lista los archivos
+            elif "ARCHIVOS" in message["message"]:
+                print("C:", message["message"])
+                #msg = input("Escoga un archivo:") # Digitar el numero del archivo
+                message = createMessage(fileId)
+                s.sendall(message)
+                # Empezar a recibir archivo
+                #file = receiveFile(s)
+
+                fileName = receiveFile(s, id, fileId) #Retorna el nombre del archivo guardado
+
+                # Luego de recibir el archivo se pide el digest:
+                #msg = input("Digite su mensaje:")  # Digitar DIGEST
+                message = createMessage(f"DIGEST{fileId}") # Está implicito en el mensaje DIGEST que el archivo fue recibido
+                s.sendall(message)
+
+                #Recibir digest
+                digest = receiveDigest(s)
+                #Se compara el digest recibido por el calculado
+                res = compareDigest(digest, fileName)
+                if res:
+                    print("El archivo no fue alterado.")
+                else:
+                    print("El archivo FUE alterado.")
+
+
+                #Cierro la conexión con el servidor
+                s.close()
+                break
+        except IOError as e:
+            if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
+                print('Reading error', str(e))
+                sys.exit()
+            continue
+        except Exception as e:
+            print('General error', str(e))
+            sys.exit()
+
+
+
+#numConnections = input("digite el numero de conexiones simultaneas que quiere realizar al servidor:")
+'''
+start = time.perf_counter()
+threads = []
+for i in range(25):
+    t = threading.Thread(target=startConnection(i))
+    t.start()
+    threads.append(t)
+
+for thread in threads:
+    thread.join()
+
+finish = time.perf_counter()
+
+print(f"Terminado en {round(finish-start, 2)} second(s)")
+'''
+
+
+
+
+
+
+
+
+
+'''
+start = time.perf_counter()
+startConnection(1)
+startConnection(2)
+startConnection(3)
+startConnection(4)
+startConnection(5)
+startConnection(6)
+startConnection(7)
+startConnection(8)
+startConnection(9)
+startConnection(10)
+startConnection(11)
+startConnection(12)
+startConnection(13)
+startConnection(14)
+startConnection(15)
+
+finish = time.perf_counter()
+
+print(f"Terminado en {round(finish-start, 2)} second(s)")
+'''
+
+'''
+
+timeStart = time.time()
+
+
+
+
+with concurrent.futures.ThreadPoolExecutor() as executor:
+    results = [executor.submit(startConnection, i) for i in range(15)]
+    #for f in concurrent.futures.as_completed(results):
+timePassed = time.time() - timeStart
+print("Segundos transcurridos:", timePassed)
+'''
+
 
 
 '''
