@@ -1,9 +1,0 @@
-LOG FILE
-
-ID: 398169
-Fecha: 2019-09-27 12:09
-Nombre del archivo: informe.pdf
-ID Cliente: 398169
-ID Prueba: 52
-Tiempo de transferencia: 0.11323520900000261 segundo(s)
-Estado de transferencia: Exitosa

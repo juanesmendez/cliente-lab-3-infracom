@@ -1,8 +1,0 @@
-LOG FILE
-
-ID: 721332
-Fecha: 2019-09-27 12:06
-Nombre del archivo: video-4.mp4
-ID Cliente: 721332
-Tiempo de transferencia: 0.2839543889999998 segundo(s)
-Estado de transferencia: Exitosa

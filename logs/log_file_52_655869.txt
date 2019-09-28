@@ -1,9 +1,0 @@
-LOG FILE
-
-ID: 655869
-Fecha: 2019-09-27 12:09
-Nombre del archivo: informe.pdf
-ID Cliente: 655869
-ID Prueba: 52
-Tiempo de transferencia: 0.11166334199999994 segundo(s)
-Estado de transferencia: Exitosa

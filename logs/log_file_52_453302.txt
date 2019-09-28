@@ -1,9 +1,0 @@
-LOG FILE
-
-ID: 453302
-Fecha: 2019-09-27 12:09
-Nombre del archivo: informe.pdf
-ID Cliente: 453302
-ID Prueba: 52
-Tiempo de transferencia: 0.11568718599999883 segundo(s)
-Estado de transferencia: Exitosa

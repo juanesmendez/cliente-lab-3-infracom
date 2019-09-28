@@ -1,9 +1,0 @@
-LOG FILE
-
-ID: 638145
-Fecha: 2019-09-27 12:09
-Nombre del archivo: informe.pdf
-ID Cliente: 638145
-ID Prueba: 52
-Tiempo de transferencia: 0.1096463700000001 segundo(s)
-Estado de transferencia: Exitosa

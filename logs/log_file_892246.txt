@@ -1,9 +1,0 @@
-LOG FILE
-
-ID: 892246
-Fecha: 2019-09-27 12:08
-Nombre del archivo: video-4.mp4
-ID Cliente: 892246
-ID Prueba: N/A
-Tiempo de transferencia: 0.32017989100000044 segundo(s)
-Estado de transferencia: Exitosa

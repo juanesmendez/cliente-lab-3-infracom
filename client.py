@@ -271,11 +271,14 @@ def startConnection(fileId, testId):
                 digest = receiveDigest(s)
                 #Se compara el digest recibido por el calculado
                 res = compareDigest(digest, fileName)
+                logFile = open(logFileName, 'a')
                 if res:
                     print("El archivo no fue alterado.")
+                    logFile.write("Estado del archivo recibido: Correcto")
                 else:
                     print("El archivo FUE alterado.")
-
+                    logFile.write("Estado del archivo recibido: Corrupto")
+                logFile.close()
 
                 #Cierro la conexión con el servidor
                 s.close()
