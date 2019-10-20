@@ -13,7 +13,7 @@ import random
 
 HEADERSIZE = 10
 
-IP = "127.0.0.1"
+IP = "3.228.188.119"
 PORT = 1236
 
 FILE_1 = "./files/archivo_recibido.pdf"
@@ -83,8 +83,38 @@ def receiveFile(clientSocket, id, fileId, logFileName):
         while bytesLeft > 0:
             # print(f"{bytesLeft} Bytes left")
             # data = data + clientSocket.recv(1024)
-            file.write(clientSocket.recv(1024))
-            bytesLeft = bytesLeft - 1024
+            try:
+                chunk = clientSocket.recv(16384)
+                file.write(chunk)
+                print("Length Chunk:", len(chunk))
+                bytesLeft = bytesLeft - len(chunk)
+                #print(f"Bytes left: {bytesLeft}")
+            except:
+                print("OCURRIO EXCEPCION 1")
+                break
+        '''
+        while bytesLeft > 1024:
+            # print(f"{bytesLeft} Bytes left")
+            # data = data + clientSocket.recv(1024)
+            try:
+                chunk = clientSocket.recv(1024)
+                file.write(chunk)
+                print("Length Chunk:", len(chunk))
+                bytesLeft = bytesLeft - len(chunk)
+                #print(f"Bytes left: {bytesLeft}")
+            except:
+                print("OCURRIO EXCEPCION 1")
+                break
+        else:
+            try:
+                chunk = clientSocket.recv(bytesLeft)
+                file.write(chunk)
+                bytesLeft = 0
+                print(f"Bytes left: {bytesLeft}")
+            except:
+                print("OCURRIO EXCEPCION 2")
+        '''
+
         finishTime = time.perf_counter()
         logFile.write(f"Tiempo de transferencia: {finishTime - startTime} segundo(s)\n")
         # data = clientSocket.recv(messageLength)
@@ -92,6 +122,14 @@ def receiveFile(clientSocket, id, fileId, logFileName):
 
         file.close()
         print("File received.")
+        
+
+        file = open(fileName, 'rb')
+        sizeReceived = len(file.read())
+        file.close()
+        print(f"File received size: {sizeReceived}")
+        
+
         # Si las lineas de arriba no lanzan ninguna excepción, la transferencia del archivo fue exitosa:
         logFile.write("Estado de transferencia: Exitosa\n")
         logFile.close()
@@ -110,8 +148,16 @@ def receiveDigest(s):
     try:
         # Desarmar header para saber el tamaño en bytes del mensaje
         messageHeader = s.recv(HEADERSIZE)
+
+        print("Digest message header:", messageHeader)
+
+
         # Atrapo el tamaño en bytes del mensaje que se va a recibir
-        messageLength = int(messageHeader.decode("utf-8").strip())
+        messageLength = int(messageHeader.decode().strip())
+
+        print("Digest message length", messageLength)
+
+
         # Se recibe el mensaje del socket que contiene el digest del archivo
         digest = s.recv(messageLength)
 
