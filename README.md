@@ -9,7 +9,7 @@ TCP client implemented in Python 🐍 in which the user can download files from 
 The following python libraries and classes were used in the client application:
 - `socket`
 - `sys` 🛠
-- `pickle`🥒: For receiving the byte chunks from the server.
+- `pickle`🥒: For deserializing objects containing byte chunks from the server and headers with important information that needs to be checked.
 - `hashlib` 🔑#️⃣: For calculating the hash digest of the file that is transferred to the client.
 - `time`⏳
 - `datetime` 📆
@@ -31,5 +31,5 @@ In order to run the project successfully, you first have to download and run the
     - Example: `IP = "3.228.188.119"`
     - NOTE: You may change the `port` if you want in line #17. The default chosen by me was `1236`. (Check that the server is running in the port you chose)
 3. Run `python3.7 main.py`
-4. Pick a file 📁 to download from the dropdown, and enjoy!☕️ (Have in mind that you can only download files that are in the `server` project directory. Locate the files you want users to be able to download in the server first.) 
+4. Pick a file 📁 to download from the dropdown, and enjoy!☕️ The received file will be located in the `/files` folder. (Have in mind that you can only download files that are in the `server` project directory. Locate the files you want users to be able to download in the server first.) 
 
