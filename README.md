@@ -1,18 +1,18 @@
 # TCP File Transfer Client 📂🗄🗃
-TCP client implemented in Python in which the user can download files from a server. The server can be found in the following repository: https://github.com/juanesmendez/tcp-server. The app has a GUI, where the user can pick the file that he wishes to download. The app can simulate having more than one client connected at the same time to the server, in order to test how well the server performs under high demand, and how it can handle concurrency. The client checks the integrity of the file received by calculating a hash digest on the byte stream, and comparing it to the hash digest sent by the server in the header.
+TCP client implemented in Python 🐍 in which the user can download files from a server. The server can be found in the following repository: https://github.com/juanesmendez/tcp-server. The app has a GUI, where the user can pick the file that he wishes to download. The app can simulate having more than one client connected at the same time to the server, in order to test how well the server performs under high demand, and how it can handle concurrency. The client checks the integrity of the file received by calculating a hash digest on the byte stream, and comparing it to the hash digest sent by the server in the header.
 
 ## Python libraries 📚
 
 The following python libraries and classes were used in the client application:
 - `socket`
 - `sys` 🛠
-- `pickle`
-- `hashlib` 🔑#️⃣
+- `pickle`🥒: For receiving the byte chunks from the server.
+- `hashlib` 🔑#️⃣: For calculating the hash digest of the file that is transferred to the client.
 - `time`⏳
 - `datetime` 📆
 - `threading`
 - `concurrent.futures`
-- `tkinter`
+- `tkinter`: Library that offers GUI components in Python 🐍.
 - `random` 
 
 ## Screenshots of the client running
